@@ -1,6 +1,6 @@
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Scanner;
+import java.io.PrintStream;
 
 enum States {start,inNum,inId,inAssign,inComment,done,error}
 
@@ -14,9 +14,11 @@ public class TinyScanner {
     char c;
 
     public TinyScanner() {
-        File f = new File("Code.txt");
+        File f = new File("tiny_sample_code.txt");
         try {
             FileInputStream fis =new FileInputStream(f);
+            PrintStream fOut = new PrintStream("scanner_output.txt");
+            System.setOut(fOut);
             byte[] data =new byte[(int)f.length()];
             fis.read(data);
             fis.close();

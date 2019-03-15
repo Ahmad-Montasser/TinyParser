@@ -1,0 +1,31 @@
+read : Reserved Word
+x : inId
+; : Special Character
+if : Reserved Word
+0 : inNum
+< : Special Character
+x : inId
+then : Reserved Word
+fact : inId
+:= : Special Character
+1 : inNum
+; : Special Character
+repeat : Reserved Word
+fact : inId
+:= : Special Character
+fact : inId
+* : Special Character
+x : inId
+; : Special Character
+x : inId
+:= : Special Character
+x : inId
+- : Special Character
+1 : inNum
+until : Reserved Word
+x : inId
+= : Special Character
+0 : inNum
+; : Special Character
+write : Reserved Word
+fact : inId
