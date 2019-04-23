@@ -1,7 +1,12 @@
 public class Token {
-    String type;
-    String value;
-    boolean valid=true;
+   private String type;
+    private String value;
+    private boolean valid=true;
+
+
+    public Token(String value) {
+        this.value = value;
+    }
 
     public Token() {
     }
@@ -36,8 +41,16 @@ public class Token {
     }
 
 
+    public boolean equals(Token t) {
+        if(t.getValue().equalsIgnoreCase(this.getValue()))
+            return true;
+        return  false;
+    }
+
     @Override
     public String toString() {
+        if(type==States.inAssign.toString())
+            type="Special Character";
         if(valid){
             return value +" : " + type;
         }
