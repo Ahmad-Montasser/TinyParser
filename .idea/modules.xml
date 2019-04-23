@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/TinyScanner.iml" filepath="$PROJECT_DIR$/TinyScanner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TinyLangParser.iml" filepath="$PROJECT_DIR$/TinyLangParser.iml" />
     </modules>
   </component>
 </project>

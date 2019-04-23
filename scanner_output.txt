@@ -2,9 +2,11 @@ read : Reserved Word
 x : inId
 ; : Special Character
 if : Reserved Word
+( : Special Character
 0 : inNum
 < : Special Character
 x : inId
+) : Special Character
 then : Reserved Word
 fact : inId
 := : Special Character
@@ -22,7 +24,6 @@ x : inId
 x : inId
 - : Special Character
 1 : inNum
-; : Special Character
 until : Reserved Word
 x : inId
 = : Special Character
@@ -30,5 +31,4 @@ x : inId
 ; : Special Character
 write : Reserved Word
 fact : inId
-; : Special Character
 end : Reserved Word
