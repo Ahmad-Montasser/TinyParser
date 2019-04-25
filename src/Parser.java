@@ -1,26 +1,40 @@
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 
 public class Parser {
     public static int index=0;
     private ArrayList<Token> tokenList ;
     public Parser(ArrayList<Token> tokenList) {
+        try {
+            PrintStream fOut = new PrintStream("parser_output.txt");
+            System.setOut(fOut);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         this.tokenList = tokenList;
         program();
     }
 
-    private void matchValue(Token expectedToken){
+    private void matchValue(Token expectedToken)throws TypeOrValueException {
         Token nextToken = tokenList.get(index);
             if(nextToken.equals(expectedToken)){
-           //     System.out.println(nextToken);
+                //System.out.println(nextToken);
                 index++;
+            }
+            else
+            { throw new TypeOrValueException(expectedToken.getValue());
             }
 
     }
-    private void matchType(Token expectedToken) {
+    private void matchType (Token expectedToken)throws TypeOrValueException {
         Token nextToken = tokenList.get(index);
-        if (expectedToken.getType().equalsIgnoreCase(expectedToken.getType())){
-        //  System.out.println(nextToken);
+        if (expectedToken.getType().equalsIgnoreCase(nextToken.getType())){
+            //System.out.println(nextToken);
             index++;
+        }
+        else{
+            throw new TypeOrValueException(expectedToken.getType());
         }
     }
 
@@ -32,16 +46,23 @@ public class Parser {
     }
 
     private void stmtSequence() {
-        System.out.println("stmt-seq is Found");
+        //System.out.println("stmt-seq is Found");
         statement();
         while(tokenList.size()>index&&tokenList.get(index).getValue().equalsIgnoreCase(";")){
-            matchValue(new Token(";"));
+            try {
+                matchValue(new Token(";"));
+            } catch (TypeOrValueException e) {
+                e.printExpectedToken();
+            }
             //System.out.println("Statement End");
-            if(tokenList.get(index).getValue().equalsIgnoreCase("until")||
-                    tokenList.get(index).getValue().equalsIgnoreCase("end")
-                    )
-                return;
+            if(index<tokenList.size()){
+                if(tokenList.get(index).getValue().equalsIgnoreCase("until")||
+                     tokenList.get(index).getValue().equalsIgnoreCase("end")
+                        )
+                    return;
+
             statement();
+            }
         }
 
     }
@@ -64,45 +85,66 @@ public class Parser {
 
     private void ifStmt(){
         System.out.println("ifStmt is Found");
-        matchValue(new Token("if"));
-        matchValue(new Token("("));
-        exp();
-        matchValue(new Token(")"));
-        matchValue(new Token("then"));
-        stmtSequence();
-        if(tokenList.get(index).getValue().equals("else")){
-            matchValue(new Token("else"));
+        try {
+            matchValue(new Token("if"));
+            matchValue(new Token("("));
+            exp();
+            matchValue(new Token(")"));
+            matchValue(new Token("then"));
             stmtSequence();
+            if(tokenList.get(index).getValue().equals("else")){
+                matchValue(new Token("else"));
+                stmtSequence();
+                matchValue(new Token("end"));
+            }
+        } catch (TypeOrValueException e) {
+            e.printExpectedToken();
         }
-        matchValue(new Token("end"));
     }
 
     private void repeatStmt(){
-        System.out.println("repeat is Found");
-        matchValue(new Token("repeat"));
-        stmtSequence();
-        matchValue(new Token("until"));
-        exp();
+        try {
+            System.out.println("repeat is Found");
+            matchValue(new Token("repeat"));
+            stmtSequence();
+            matchValue(new Token("until"));
+            exp();
+        } catch (TypeOrValueException e) {
+            e.printStackTrace();
+        }
     }
 
     private void assignStmt(){
-        System.out.println("assign is Found");
-        matchType(new Token("inId",""));
-        matchValue(new Token(":="));
-        exp();
+        try {
+            System.out.println("assign is Found");
+            matchType(new Token("inId",""));
+            matchValue(new Token(":="));
+            exp();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+
     }
 
     private void readStmt(){
-        System.out.println("read is Found");
-        matchValue(new Token("read"));
-        matchType(new Token("inId",""));
+        try {
+            System.out.println("read is Found");
+            matchValue(new Token("read"));
+            matchType(new Token("inId",""));
+        } catch (TypeOrValueException e) {
+            e.printExpectedToken();
+        }
 
     }
 
     private void writeStmt(){
-        System.out.println("write is Found");
-        matchValue(new Token("write"));
-        exp();
+        try {
+            System.out.println("write is Found");
+            matchValue(new Token("write"));
+            exp();
+        } catch (TypeOrValueException e) {
+            e.printExpectedToken();
+        }
 
     }
 
@@ -118,10 +160,20 @@ public class Parser {
     }
 
     private void compOp() {
-        if(tokenList.get(index).getValue().equals("="))
-            matchValue(new Token("="));
-        else if(tokenList.get(index).getValue().equals("<"))
-            matchValue(new Token("<"));
+        if(tokenList.get(index).getValue().equals("=")) {
+            try {
+                matchValue(new Token("="));
+            } catch (TypeOrValueException e) {
+                e.printExpectedToken();
+            }
+        }
+        else if(tokenList.get(index).getValue().equals("<")) {
+            try {
+                matchValue(new Token("<"));
+            } catch (TypeOrValueException e) {
+                e.printExpectedToken();
+            }
+        }
         else
             //TODO Handle Errors
             return;
@@ -139,13 +191,16 @@ public class Parser {
     }
 
     private void addOp() {
-        if(tokenList.get(index).getValue().equals("+"))
-            matchValue(new Token("+"));
-        else if(tokenList.get(index).getValue().equals("-"))
-            matchValue(new Token("-"));
-        else
-            //TODO Handle Errors
-            return;
+            try {
+                if(tokenList.get(index).getValue().equals("+"))
+                matchValue(new Token("+"));
+                else if(tokenList.get(index).getValue().equals("-"))
+                    matchValue(new Token("-"));
+                else
+                    matchValue(new Token("addOp"));
+            } catch (TypeOrValueException e) {
+                e.printExpectedToken();
+            }
     }
 
     private void term() {
@@ -158,30 +213,37 @@ public class Parser {
     }
 
     private void mulOp() {
-        if(tokenList.get(index).getValue().equals("*"))
-            matchValue(new Token("*"));
-        else if(tokenList.get(index).getValue().equals("/"))
-            matchValue(new Token("/"));
-        else
-            //TODO Handle Errors
-            return;
+       try {
+           if(tokenList.get(index).getValue().equals("*"))
+               matchValue(new Token("*"));
+           else if(tokenList.get(index).getValue().equals("/"))
+               matchValue(new Token("/"));
+           else
+               matchValue(new Token("mulOp"));
+       }catch (TypeOrValueException e){
+           e.printExpectedToken();
+       }
+
     }
 
     private void factor(){
-        if(tokenList.get(index).getValue().equals("(")){
-            matchValue(tokenList.get(index));
-            exp();
-            matchValue(new Token(")"));
-        }
-        else if(tokenList.get(index).getType().equals("inNum")){
-            matchType(new Token("inNum",""));
-        }
-        else if(tokenList.get(index).getType().equals("inId")){
-            matchType(new Token("inId",""));
-        }
-        else
-            //TODO handle errors
-            System.out.println("no match");
-    }
+       try {
+           if(tokenList.get(index).getValue().equals("(")){
+               matchValue(tokenList.get(index));
+               exp();
+               matchValue(new Token(")"));
+           }
+           else if(tokenList.get(index).getType().equals("inNum")){
+               matchType(new Token("inNum",""));
+           }
+           else if(tokenList.get(index).getType().equals("inId")){
+               matchType(new Token("inId",""));
+           }
+           else
+               matchValue(new Token("( or Number or identifier"));
+       }catch (TypeOrValueException e){
+           e.printExpectedToken();
+       }
+       }
 
 }

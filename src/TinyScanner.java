@@ -2,19 +2,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.List;
 
-enum States {start, inNum, inId, inAssign, inComment, done, error}
+
 
 public class TinyScanner {
-    public static String wholeFile;
-    public static int pointer = 0;
-    public static States state = States.start;
-    String currentTokenValue = "";
-    String currentTokenType;
-    Token t;
-    char c;
-    public ArrayList<Token> tokenList= new ArrayList<Token>();
+    public enum States {start, inNum, inId, inAssign, inComment, done, error}
+    private String wholeFile;
+    private int pointer = 0;
+    private States state = States.start;
+    private String currentTokenValue = "";
+    private String currentTokenType;
+    private Token t;
+    private char c;
+    private ArrayList<Token> tokenList= new ArrayList<Token>();
+
     public TinyScanner() {
         File f = new File("tiny_sample_code.txt");
         try {
@@ -26,7 +27,7 @@ public class TinyScanner {
             fis.close();
             wholeFile = new String(data, "UTF-8");
             if(wholeFile.length()>0 )
-            c = wholeFile.charAt(pointer);
+                c = wholeFile.charAt(pointer);
             String temp = "";
             for (int i = 0; i < wholeFile.length(); i++) {
                 char d = wholeFile.charAt(i);
@@ -37,6 +38,7 @@ public class TinyScanner {
 
             }
             wholeFile = temp + " ";
+            getTokens();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -91,7 +93,6 @@ public class TinyScanner {
             }
         }
     }
-
     private void setState() {
         if (state.equals(States.start)) {
             if (Character.isWhitespace(c)) {
@@ -145,12 +146,15 @@ public class TinyScanner {
         }
         return false;
     }
-
     private boolean isReservedWord(String s) {
         if (s.equals("write") || s.equals("if") || s.equals("until") || s.equals("read")
                 || s.equals("end") || s.equals("else") || s.equals("then") || s.equals("repeat"))
             return true;
         return false;
+    }
+
+    public ArrayList<Token> getTokenList() {
+        return tokenList;
     }
 }
 
