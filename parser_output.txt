@@ -1,10 +1,13 @@
 program is Found
+stmt-seq is Found
 read is Found
 ifStmt is Found
 exp is Found
+stmt-seq is Found
 assign is Found
 exp is Found
 repeat is Found
+stmt-seq is Found
 assign is Found
 exp is Found
 assign is Found

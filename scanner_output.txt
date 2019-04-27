@@ -31,4 +31,5 @@ x : inId
 ; : Special Character
 write : Reserved Word
 fact : inId
+; : Special Character
 end : Reserved Word

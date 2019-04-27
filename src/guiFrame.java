@@ -5,7 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class guiFrame extends JFrame {
-    private int panelWidth = Toolkit.getDefaultToolkit().getScreenSize().width/2;
+    private int panelWidth  = Toolkit.getDefaultToolkit().getScreenSize().width/2;
     private int panelHeight = Toolkit.getDefaultToolkit().getScreenSize().height/2;
     public guiFrame() throws HeadlessException {
         this.setTitle("Syntax Tree");

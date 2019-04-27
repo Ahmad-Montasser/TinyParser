@@ -46,7 +46,7 @@ public class Parser {
     }
 
     private void stmtSequence() {
-        //System.out.println("stmt-seq is Found");
+        System.out.println("stmt-seq is Found");
         statement();
         while(tokenList.size()>index&&tokenList.get(index).getValue().equalsIgnoreCase(";")){
             try {
