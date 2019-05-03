@@ -1,10 +1,16 @@
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 
 public class Parser {
-    public static int index=0;
-    private ArrayList<Token> tokenList ;
+    public static int index = 0;
+    private ArrayList<Token> tokenList;
+    private Node root = null, currentNode = null;
+    private Stack<Node> previousNodes = new Stack<>(); // to store the parent
+    private boolean yoyo=false;
+
     public Parser(ArrayList<Token> tokenList) {
         try {
             PrintStream fOut = new PrintStream("parser_output.txt");
@@ -16,132 +22,176 @@ public class Parser {
         program();
     }
 
-    private void matchValue(Token expectedToken)throws TypeOrValueException {
+    private void matchValue(Token expectedToken) throws TypeOrValueException {
         Token nextToken = tokenList.get(index);
-            if(nextToken.equals(expectedToken)){
-                //System.out.println(nextToken);
-                index++;
-            }
-            else
-            { throw new TypeOrValueException(expectedToken.getValue());
-            }
-
-    }
-    private void matchType (Token expectedToken)throws TypeOrValueException {
-        Token nextToken = tokenList.get(index);
-        if (expectedToken.getType().equalsIgnoreCase(nextToken.getType())){
+        if (nextToken.equals(expectedToken)) {
             //System.out.println(nextToken);
             index++;
+
+        } else {
+            throw new TypeOrValueException(expectedToken.getValue());
         }
-        else{
+
+    }
+
+    private void matchType(Token expectedToken) throws TypeOrValueException {
+        Token nextToken = tokenList.get(index);
+        if (expectedToken.getType().equalsIgnoreCase(nextToken.getType())) {
+            //System.out.println(nextToken);
+            index++;
+        } else {
             throw new TypeOrValueException(expectedToken.getType());
         }
     }
 
 
-
     private void program() {
         System.out.println("program is Found");
+        root = new Node("program");
+        previousNodes.push(root);
         stmtSequence();
     }
 
     private void stmtSequence() {
         System.out.println("stmt-seq is Found");
+        Node stmtSeq = new Node("stmt-seq");
         statement();
-        while(tokenList.size()>index&&tokenList.get(index).getValue().equalsIgnoreCase(";")){
+        while (tokenList.size() > index && tokenList.get(index).getValue().equalsIgnoreCase(";")) {
             try {
                 matchValue(new Token(";"));
             } catch (TypeOrValueException e) {
                 e.printExpectedToken();
             }
             //System.out.println("Statement End");
-            if(index<tokenList.size()){
-                if(tokenList.get(index).getValue().equalsIgnoreCase("until")||
-                     tokenList.get(index).getValue().equalsIgnoreCase("end")
-                        )
+            if (index < tokenList.size()) {
+                if (tokenList.get(index).getValue().equalsIgnoreCase("until") ||
+                        tokenList.get(index).getValue().equalsIgnoreCase("end")) {
+//                    previousNodes.pop();
                     return;
+                }
 
-            statement();
+                statement();
             }
         }
 
     }
 
     private void statement() {
-        if(tokenList.get(index).getValue().equals("read"))
+        if (tokenList.get(index).getValue().equals("read"))
             readStmt();
-        else if(tokenList.get(index).getValue().equals("write"))
+        else if (tokenList.get(index).getValue().equals("write"))
             writeStmt();
-        else if(tokenList.get(index).getValue().equals("repeat"))
+        else if (tokenList.get(index).getValue().equals("repeat"))
             repeatStmt();
-        else if(tokenList.get(index).getValue().equals("if"))
+        else if (tokenList.get(index).getValue().equals("if"))
             ifStmt();
-        else if(tokenList.get(index).getType().equals("inId"))
+        else if (tokenList.get(index).getType().equals("inId"))
             assignStmt();
         else
             ;//TODO Handle Errors
 
     }
 
-    private void ifStmt(){
+    private void ifStmt() {
         System.out.println("ifStmt is Found");
+        Node ifStmt = new Node("ifStmt");
+        currentNode = previousNodes.peek();
+        currentNode.addChild(ifStmt);
+        previousNodes.push(ifStmt);
         try {
             matchValue(new Token("if"));
+            System.out.println("if");
             matchValue(new Token("("));
             exp();
             matchValue(new Token(")"));
             matchValue(new Token("then"));
+            System.out.println("then");
             stmtSequence();
-            if(tokenList.get(index).getValue().equals("else")){
+            if (tokenList.get(index).getValue().equals("else")) {
+                Node elseNode = new Node("else");
+                currentNode = previousNodes.peek();
+                currentNode.addChild(elseNode);
+                previousNodes.push(elseNode);
                 matchValue(new Token("else"));
+                System.out.println("else");
                 stmtSequence();
-                matchValue(new Token("end"));
+                previousNodes.pop();
             }
+            matchValue(new Token("end"));
+            System.out.println("end");
+            previousNodes.pop();
         } catch (TypeOrValueException e) {
             e.printExpectedToken();
         }
+
     }
 
-    private void repeatStmt(){
+    private void repeatStmt() {
         try {
-            System.out.println("repeat is Found");
+            System.out.println("repeatStmt is Found");
+            Node repeatStmt = new Node("repeatStmt");
+            currentNode = previousNodes.peek();
+            currentNode.addChild(repeatStmt);
+            previousNodes.push(repeatStmt);
             matchValue(new Token("repeat"));
+            System.out.println("repeat");
             stmtSequence();
             matchValue(new Token("until"));
+            System.out.println("until");
             exp();
+            previousNodes.pop();
         } catch (TypeOrValueException e) {
             e.printStackTrace();
         }
     }
 
-    private void assignStmt(){
+    private void assignStmt() {
         try {
-            System.out.println("assign is Found");
-            matchType(new Token("inId",""));
+            System.out.println("assignStmt is Found");
+            Node assignStmt = new Node("assignStmt");
+            currentNode = previousNodes.peek();
+            currentNode.addChild(assignStmt);
+            previousNodes.push(assignStmt);
+            previousNodes.peek().addChild(tokenList.get(index).getValue());
+            matchType(new Token("inId", ""));
             matchValue(new Token(":="));
             exp();
+            previousNodes.pop();
         } catch (Exception e) {
             System.out.println(e.toString());
         }
 
     }
 
-    private void readStmt(){
+    private void readStmt() {
         try {
-            System.out.println("read is Found");
+            System.out.println("readStmt is Found");
+            Node readStmt = new Node("readStmt");
+            currentNode = previousNodes.peek();
+            currentNode.addChild(readStmt);
+            previousNodes.push(readStmt);
             matchValue(new Token("read"));
-            matchType(new Token("inId",""));
+            System.out.println("read");
+            previousNodes.peek().addChild(tokenList.get(index).getValue());
+            matchType(new Token("inId", ""));
+            previousNodes.pop();
         } catch (TypeOrValueException e) {
             e.printExpectedToken();
         }
 
     }
 
-    private void writeStmt(){
+    private void writeStmt() {
         try {
-            System.out.println("write is Found");
+            System.out.println("writeStmt is Found");
+            Node writeStmt = new Node("writeStmt");
+            currentNode = previousNodes.peek();
+            currentNode.addChild(writeStmt);
+            previousNodes.push(writeStmt);
             matchValue(new Token("write"));
+            System.out.println("write");
             exp();
+            previousNodes.pop();
         } catch (TypeOrValueException e) {
             e.printExpectedToken();
         }
@@ -150,31 +200,40 @@ public class Parser {
 
     private void exp() {
         System.out.println("exp is Found");
+        Node exp = new Node("exp");
+        currentNode = previousNodes.peek();
+        currentNode.addChild(exp);
+        previousNodes.push(exp);
         simpleExp();
-        while(tokenList.get(index).getValue().equals("<")||
-                tokenList.get(index).getValue().equals("=")){
+        while (tokenList.get(index).getValue().equals("<") ||
+                tokenList.get(index).getValue().equals("=")) {
             compOp();
             simpleExp();
         }
-
+        previousNodes.pop();
     }
 
     private void compOp() {
-        if(tokenList.get(index).getValue().equals("=")) {
+        Node plusMinus = new Node("=<");
+        currentNode = previousNodes.peek();
+        Node deleted = currentNode.deleteChild();
+        currentNode.addChild(plusMinus);
+        plusMinus.addChild(deleted);
+        previousNodes.push(plusMinus);
+        yoyo=true;
+        if (tokenList.get(index).getValue().equals("=")) {
             try {
                 matchValue(new Token("="));
             } catch (TypeOrValueException e) {
                 e.printExpectedToken();
             }
-        }
-        else if(tokenList.get(index).getValue().equals("<")) {
+        } else if (tokenList.get(index).getValue().equals("<")) {
             try {
                 matchValue(new Token("<"));
             } catch (TypeOrValueException e) {
                 e.printExpectedToken();
             }
-        }
-        else
+        } else
             //TODO Handle Errors
             return;
 
@@ -182,8 +241,8 @@ public class Parser {
 
     private void simpleExp() {
         term();
-        while(tokenList.get(index).getValue().equals("+")||
-                tokenList.get(index).getValue().equals("-")){
+        while (tokenList.get(index).getValue().equals("+") ||
+                tokenList.get(index).getValue().equals("-")) {
             addOp();
             term();
         }
@@ -191,59 +250,83 @@ public class Parser {
     }
 
     private void addOp() {
-            try {
-                if(tokenList.get(index).getValue().equals("+"))
+        try {
+
+            Node plusMinus = new Node("+-");
+            currentNode = previousNodes.peek();
+            Node deleted = currentNode.deleteChild();
+            currentNode.addChild(plusMinus);
+            plusMinus.addChild(deleted);
+            previousNodes.push(plusMinus);
+            yoyo=true;
+            if (tokenList.get(index).getValue().equals("+"))
                 matchValue(new Token("+"));
-                else if(tokenList.get(index).getValue().equals("-"))
-                    matchValue(new Token("-"));
-                else
-                    matchValue(new Token("addOp"));
-            } catch (TypeOrValueException e) {
-                e.printExpectedToken();
-            }
+            else if (tokenList.get(index).getValue().equals("-"))
+                matchValue(new Token("-"));
+            else
+                matchValue(new Token("addOp"));
+        } catch (TypeOrValueException e) {
+            e.printExpectedToken();
+        }
     }
 
     private void term() {
         factor();
-        while(tokenList.get(index).getValue().equals("/")||
-                tokenList.get(index).getValue().equals("*")){
+        while (tokenList.get(index).getValue().equals("/") ||
+                tokenList.get(index).getValue().equals("*")) {
             mulOp();
             factor();
         }
     }
 
     private void mulOp() {
-       try {
-           if(tokenList.get(index).getValue().equals("*"))
-               matchValue(new Token("*"));
-           else if(tokenList.get(index).getValue().equals("/"))
-               matchValue(new Token("/"));
-           else
-               matchValue(new Token("mulOp"));
-       }catch (TypeOrValueException e){
-           e.printExpectedToken();
-       }
+        try {
+            Node plusMinus = new Node("/*");
+            currentNode = previousNodes.peek();
+            Node deleted = currentNode.deleteChild();
+            currentNode.addChild(plusMinus);
+            plusMinus.addChild(deleted);
+            previousNodes.push(plusMinus);
+            yoyo=true;
+            if (tokenList.get(index).getValue().equals("*"))
+                matchValue(new Token("*"));
+            else if (tokenList.get(index).getValue().equals("/"))
+                matchValue(new Token("/"));
+            else
+                matchValue(new Token("mulOp"));
+        } catch (TypeOrValueException e) {
+            e.printExpectedToken();
+        }
 
     }
 
-    private void factor(){
-       try {
-           if(tokenList.get(index).getValue().equals("(")){
-               matchValue(tokenList.get(index));
-               exp();
-               matchValue(new Token(")"));
-           }
-           else if(tokenList.get(index).getType().equals("inNum")){
-               matchType(new Token("inNum",""));
-           }
-           else if(tokenList.get(index).getType().equals("inId")){
-               matchType(new Token("inId",""));
-           }
-           else
-               matchValue(new Token("( or Number or identifier"));
-       }catch (TypeOrValueException e){
-           e.printExpectedToken();
-       }
-       }
+    private void factor() {
+        try {
 
+            if (tokenList.get(index).getValue().equals("(")) {
+                matchValue(tokenList.get(index));
+                exp();
+                matchValue(new Token(")"));
+            } else if (tokenList.get(index).getType().equals("inNum")) {
+                Node n= new Node(tokenList.get(index).getValue());
+                previousNodes.peek().addChild(n);
+                matchType(new Token("inNum", ""));
+            } else if (tokenList.get(index).getType().equals("inId")) {
+                Node n= new Node(tokenList.get(index).getValue());
+                previousNodes.peek().addChild(n);
+                matchType(new Token("inId", ""));
+            } else
+                matchValue(new Token("( or Number or identifier"));
+        } catch (TypeOrValueException e) {
+            e.printExpectedToken();
+        }
+        if(yoyo){
+            previousNodes.pop();
+            yoyo=false;
+        }
+    }
+
+    public Node getRoot() {
+        return root;
+    }
 }

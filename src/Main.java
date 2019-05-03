@@ -1,13 +1,11 @@
-import javax.swing.*;
+import java.util.Arrays;
 
 public class Main {
     public static void main(String args[]){
         TinyScanner tinyScanner=new TinyScanner();
         Parser p =new Parser(tinyScanner.getTokenList());
-        guiFrame guiFrame =new guiFrame();
-        guiPanel mainPanel =new guiPanel();
-        JScrollPane jScrollPane =new JScrollPane(mainPanel);
-        guiFrame.add(jScrollPane);
+        Node root = p.getRoot();
+        guiFrame guiFrame=new guiFrame(root);
         guiFrame.setVisible(true);
     }
 }

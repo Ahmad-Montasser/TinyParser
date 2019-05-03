@@ -1,7 +1,5 @@
 public class TypeOrValueException extends Exception {
     private String expectedToken;
-
-
     public void printExpectedToken() {
          System.out.println(expectedToken);
     }
